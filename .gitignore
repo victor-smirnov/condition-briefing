@@ -15,6 +15,5 @@ data/
 # Test output
 ui-shots/
 
-# Office lock files and local scratch copies
+# Office lock files
 .~lock.*#
-_deck.pptx
