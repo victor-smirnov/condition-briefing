@@ -1,0 +1,52 @@
+services:
+  app:
+    build: .
+    image: briefing:local
+    env_file: .env
+    environment:
+      STORE_URL: file:///data/runs
+      PHOENIX_COLLECTOR_ENDPOINT: http://phoenix:6006/v1/traces
+      PHOENIX_PROJECT_NAME: briefing
+    depends_on: [phoenix]
+    ports:
+      - "127.0.0.1:${APP_PORT:-8090}:8080"
+    volumes:
+      - ./data:/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/_stcore/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+  # LLM call traces (OpenInference spans from the OpenAI SDK). UI on PHOENIX_PORT.
+  phoenix:
+    image: arizephoenix/phoenix:version-20.18.0
+    environment:
+      PHOENIX_WORKING_DIR: /mnt/data
+    ports:
+      - "127.0.0.1:${PHOENIX_PORT:-6016}:6006"
+    volumes:
+      - phoenix-data:/mnt/data
+    restart: unless-stopped
+
+  # Same image against a GCS emulator: `docker compose --profile gcs up`.
+  # Exercises the gs:// store that Cloud Run uses.
+  gcs:
+    profiles: ["gcs"]
+    image: fsouza/fake-gcs-server:1.52.2
+    command: ["-scheme", "http", "-port", "4443", "-external-url", "http://gcs:4443", "-backend", "memory"]
+
+  app-gcs:
+    profiles: ["gcs"]
+    image: briefing:local
+    depends_on: [gcs]
+    env_file: .env
+    environment:
+      STORE_URL: gs://briefing-runs/runs
+      STORAGE_EMULATOR_HOST: http://gcs:4443
+    ports:
+      - "127.0.0.1:${APP_GCS_PORT:-8091}:8080"
+
+volumes:
+  phoenix-data:

@@ -1,0 +1,23 @@
+[project]
+name = "briefing"
+version = "0.1.0"
+description = "Condition briefing generator with step-level provenance"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "arize-phoenix-otel>=0.17.2",
+    "google-cloud-storage>=3.17.0",
+    "httpx>=0.28.1",
+    "openai>=3.29.0",
+    "openinference-instrumentation-openai>=0.1.65",
+    "pydantic>=2.14.1",
+    "streamlit>=1.65.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = [
+    "playwright>=1.63.0",
+]
